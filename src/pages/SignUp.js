@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { db } from "../firebase.config";
 
@@ -44,6 +45,16 @@ function SignUp(props) {
       await updateProfile(auth.currentUser, {
         displayName: name,
       });
+
+      // copy of name, email, password data
+      // with `delete` we remove password from the object
+      // adding timestamp
+      const formDataCopy = { ...formData };
+      delete formDataCopy.password;
+      formDataCopy.timestamp = serverTimestamp();
+
+      // sending data to firestore database to users collection
+      await setDoc(doc(db, "users", user.uid), formDataCopy);
 
       // redirecting
       navigate("/");
