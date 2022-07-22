@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { ReactComponent as ArrowRightIcon } from "../assets/svg/keyboardArrowRightIcon.svg";
 import visibilityIcon from "../assets/svg/visibilityIcon.svg";
 import {
@@ -59,7 +60,7 @@ function SignUp(props) {
       // redirecting
       navigate("/");
     } catch (err) {
-      console.log("Error: ", err);
+      toast.error("Something went wrong with registration!");
     }
   };
 
