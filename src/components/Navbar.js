@@ -63,7 +63,7 @@ function Navbar(props) {
                   : "navbarListItemName"
               }
             >
-              Navbar
+              Profile
             </p>
           </li>
         </ul>
