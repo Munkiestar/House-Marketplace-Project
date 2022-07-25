@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { ReactComponent as ArrowRightIcon } from "../assets/svg/keyboardArrowRightIcon.svg";
 import visibilityIcon from "../assets/svg/visibilityIcon.svg";
+import OAuth from "../components/OAuth";
 
 function SignIn(props) {
   const [showPass, setShowPass] = useState(false);
@@ -35,7 +37,7 @@ function SignIn(props) {
         navigate("/");
       }
     } catch (err) {
-      console.log("Error: ", err);
+      toast.error("Bad User Credentials");
     }
   };
 
@@ -88,6 +90,7 @@ function SignIn(props) {
       </form>
 
       {/*  Google OAuth  */}
+      <OAuth />
 
       <Link to="/sign-up" className="registerLink">
         Sign Up
