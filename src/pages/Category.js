@@ -12,6 +12,7 @@ import {
 import { db } from "../firebase.config";
 import { toast } from "react-toastify";
 import Loader from "../components/Loader";
+import ListingItem from "../components/ListingItem";
 
 function Category(props) {
   const [listings, setListings] = useState(null);
@@ -54,10 +55,41 @@ function Category(props) {
     };
 
     fetchListings();
-  }, []);
+  }, [params.categoryName]);
 
-  console.log("listings", listings);
-  return <div></div>;
+  // console.log("listings", listings);
+  return (
+    <div className="category">
+      <header>
+        <p className="pageHeader">
+          {params.categoryName === "rent"
+            ? "Places for rent"
+            : "Places for sale"}
+        </p>
+      </header>
+
+      {loading ? (
+        <Loader />
+      ) : listings && listings.length > 0 ? (
+        <>
+          <main>
+            <ul className="categoryListings">
+              {listings.map((listing) => (
+                <ListingItem
+                  listing={listing.data}
+                  id={listing.id}
+                  key={listing.id}
+                  // onDelete
+                />
+              ))}
+            </ul>
+          </main>
+        </>
+      ) : (
+        <p> No listings for {params.categoryName}</p>
+      )}
+    </div>
+  );
 }
 
 export default Category;
