@@ -65,7 +65,31 @@ function CreateListing() {
 
   // handle onClick btn
   const onMutate = (e) => {
-    e.preventDefault();
+    let boolean = null;
+
+    // for booleans
+    if (e.target.value === "true") {
+      boolean = true;
+    }
+    if (e.target.value === "false") {
+      boolean = false;
+    }
+
+    // for files
+    if (e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        images: e.target.files,
+      }));
+    }
+
+    // text / booleans / numbers
+    if (!e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [e.target.name]: boolean ?? e.target.value,
+      }));
+    }
   };
 
   {
@@ -86,9 +110,9 @@ function CreateListing() {
             <button
               name="type"
               id="type"
+              value="sale"
               type="button"
               className={type === "sale" ? "formButtonActive" : "formButton"}
-              value="type"
               onClick={onMutate}
             >
               Sell
@@ -96,12 +120,12 @@ function CreateListing() {
             <button
               name="type"
               id="type"
+              value="rent"
               type="button"
               className={type === "rent" ? "formButtonActive" : "formButton"}
-              value="rent"
               onClick={onMutate}
             >
-              Sell
+              Rent
             </button>
           </div>
           <label htmlFor="" className="formLabel">
