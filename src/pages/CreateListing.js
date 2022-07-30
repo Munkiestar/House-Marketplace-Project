@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { db } from "../firebase.config";
+import { v4 as uuid } from "uuid";
 import Loader from "../components/Loader";
 import { toast } from "react-toastify";
 
@@ -87,7 +95,7 @@ function CreateListing() {
       };
 
       const res = await fetch(
-        `https://api.geoapify.com/v1/geocode/search?text=${address}&apiKey=&${process.env.REACT_APP_GEOCODE_API_KEY}`,
+        `https://api.geoapify.com/v1/geocode/search?text=${address}&apiKey=${process.env.REACT_APP_GEOCODE_API_KEY}`,
         requestOptions
       );
       const data = await res.json();
@@ -96,13 +104,13 @@ function CreateListing() {
       geoLocation.lng = data.features[0]?.properties.lon ?? 0;
 
       location =
-        data.statusCode === "400"
+        data.statusCode === "400" || data.statusCode === "401"
           ? undefined
           : data.features[0]?.properties.formatted;
 
       if (location === undefined || location.includes("undefined")) {
         setIsLoading(false);
-        toast.error("Please enter a correct addres");
+        toast.error("Please enter a correct address");
         return;
       }
     } else {
@@ -111,6 +119,58 @@ function CreateListing() {
       location = address;
     }
 
+    // store image in firebase
+    const storeImage = async (image) => {
+      return new Promise((res, rej) => {
+        const storage = getStorage();
+        const fileName = `${auth.currentUser.uid}-${image.name}-${uuid()}`;
+
+        const storageRef = ref(storage, "images/" + fileName);
+
+        const uploadTask = uploadBytesResumable(storageRef, image);
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+            }
+          },
+          (error) => {
+            rej(error);
+            toast.error("unsuccessful uploads");
+            // Handle unsuccessful uploads
+          },
+          () => {
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              res(downloadURL);
+            });
+          }
+        );
+      });
+    };
+
+    // call storeImage for all images
+    const imgUrls = await Promise.all(
+      [...images].map((img) => storeImage(img))
+    ).catch(() => {
+      setIsLoading(false);
+      toast.error("Images are not uploaded");
+      return;
+    });
+
+    //
+    console.log("img", imgUrls);
     setIsLoading(false);
   };
 
