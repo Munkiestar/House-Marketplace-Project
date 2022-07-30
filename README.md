@@ -12,7 +12,8 @@ The listings use Google geocoding to get the coords from the address field. You 
 
 - React Router Dom
 - react-toastify [Link](https://www.npmjs.com/package/react-toastify)
-
+- firestore/firebase
+- Geolocation [Link](https://www.geoapify.com/)
 
 
 ### Run

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Loader from "../components/Loader";
+import { toast } from "react-toastify";
 
 function CreateListing() {
   const [formData, setFormData] = useState({
@@ -59,12 +60,62 @@ function CreateListing() {
   }, [isMounted]);
 
   // handle Form submit
-  const handleSubmitForm = (e) => {
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
+
+    setIsLoading(true);
+
+    if (discountedPrice >= regularPrice) {
+      setIsLoading(false);
+      toast.error("Discounted price must be less than regular price");
+      return;
+    }
+
+    if (images.length > 6) {
+      setIsLoading(false);
+      toast.error("Please put max of 6 images");
+      return;
+    }
+
+    // geocoding
+    let geoLocation = {};
+    let location;
+
+    if (geoLocationEnabled) {
+      var requestOptions = {
+        method: "GET",
+      };
+
+      const res = await fetch(
+        `https://api.geoapify.com/v1/geocode/search?text=${address}&apiKey=&${process.env.REACT_APP_GEOCODE_API_KEY}`,
+        requestOptions
+      );
+      const data = await res.json();
+
+      geoLocation.lat = data.features[0]?.properties.lat ?? 0;
+      geoLocation.lng = data.features[0]?.properties.lon ?? 0;
+
+      location =
+        data.statusCode === "400"
+          ? undefined
+          : data.features[0]?.properties.formatted;
+
+      if (location === undefined || location.includes("undefined")) {
+        setIsLoading(false);
+        toast.error("Please enter a correct addres");
+        return;
+      }
+    } else {
+      geoLocation.lat = latitude;
+      geoLocation.lng = longitude;
+      location = address;
+    }
+
+    setIsLoading(false);
   };
 
   // handle onClick btn
-  const onMutate = (e) => {
+  const onInputFieldChange = (e) => {
     let boolean = null;
 
     // for booleans
@@ -113,7 +164,7 @@ function CreateListing() {
               value="sale"
               type="button"
               className={type === "sale" ? "formButtonActive" : "formButton"}
-              onClick={onMutate}
+              onClick={onInputFieldChange}
             >
               Sell
             </button>
@@ -123,7 +174,7 @@ function CreateListing() {
               value="rent"
               type="button"
               className={type === "rent" ? "formButtonActive" : "formButton"}
-              onClick={onMutate}
+              onClick={onInputFieldChange}
             >
               Rent
             </button>
@@ -136,7 +187,7 @@ function CreateListing() {
             id="name"
             value={name}
             type="text"
-            onChange={onMutate}
+            onChange={onInputFieldChange}
             maxLength="32"
             minLength="10"
             required
@@ -150,7 +201,7 @@ function CreateListing() {
                 id="bedrooms"
                 value={bedrooms}
                 type="number"
-                onChange={onMutate}
+                onChange={onInputFieldChange}
                 min="1"
                 max="50"
                 required
@@ -164,7 +215,7 @@ function CreateListing() {
                 id="bathrooms"
                 value={bathrooms}
                 type="number"
-                onChange={onMutate}
+                onChange={onInputFieldChange}
                 min="1"
                 max="50"
                 required
@@ -178,7 +229,7 @@ function CreateListing() {
               name="parking"
               id="parking"
               value={true}
-              onClick={onMutate}
+              onClick={onInputFieldChange}
               type="button"
               className={parking ? "formButtonActive" : "formButton"}
             >
@@ -226,7 +277,7 @@ function CreateListing() {
             name="address"
             id="address"
             value={address}
-            onChange={onMutate}
+            onChange={onInputFieldChange}
             className="formInputAddress"
           />
           {!geoLocationEnabled && (
@@ -237,7 +288,7 @@ function CreateListing() {
                   name="latitude"
                   id="latitude"
                   value={latitude}
-                  onChange={onMutate}
+                  onChange={onInputFieldChange}
                   required
                   type="number"
                   className="formInputSmall"
@@ -249,7 +300,7 @@ function CreateListing() {
                   name="longitude"
                   id="longitude"
                   value={longitude}
-                  onChange={onMutate}
+                  onChange={onInputFieldChange}
                   required
                   type="number"
                   className="formInputSmall"
@@ -264,7 +315,7 @@ function CreateListing() {
               id="offer"
               value={true}
               type="button"
-              onClick={onMutate}
+              onClick={onInputFieldChange}
               className={offer ? "formButtonActive" : "formButton"}
             >
               Yes
@@ -274,7 +325,7 @@ function CreateListing() {
               id="offer"
               value={false}
               type="button"
-              onClick={onMutate}
+              onClick={onInputFieldChange}
               className={
                 !offer && offer !== null ? "formButtonActive" : "formButton"
               }
@@ -289,7 +340,7 @@ function CreateListing() {
               id="regularPrice"
               value={regularPrice}
               type="number"
-              onChange={onMutate}
+              onChange={onInputFieldChange}
               min="50"
               max="750000000"
               required
@@ -304,7 +355,7 @@ function CreateListing() {
                 name="discountedPrice"
                 id="discountedPrice"
                 value={discountedPrice}
-                onChange={onMutate}
+                onChange={onInputFieldChange}
                 min="50"
                 max="750000000"
                 required={offer}
@@ -320,7 +371,7 @@ function CreateListing() {
           <input
             name="images"
             id="images"
-            onChange={onMutate}
+            onChange={onInputFieldChange}
             max="6"
             type="file"
             className="formInputFile"
