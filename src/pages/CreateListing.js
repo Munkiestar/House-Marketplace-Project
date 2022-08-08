@@ -7,6 +7,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from "firebase/storage";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.config";
 import { v4 as uuid } from "uuid";
 import Loader from "../components/Loader";
@@ -116,7 +117,6 @@ function CreateListing() {
     } else {
       geoLocation.lat = latitude;
       geoLocation.lng = longitude;
-      location = address;
     }
 
     // store image in firebase
@@ -169,9 +169,25 @@ function CreateListing() {
       return;
     });
 
-    //
-    console.log("img", imgUrls);
+    const formDataCopy = {
+      ...formData,
+      imgUrls,
+      geoLocation,
+      timestamp: serverTimestamp(),
+    };
+
+    formDataCopy.location = address;
+    delete formDataCopy.images;
+    delete formDataCopy.address;
+
+    !formDataCopy.offer && delete formDataCopy.discountedPrice;
+
+    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+
     setIsLoading(false);
+
+    toast.success("Listing saved");
+    navigate(`/category/${formDataCopy.type}/${docRef.id}`);
   };
 
   // handle onClick btn

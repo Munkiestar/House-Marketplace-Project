@@ -8,7 +8,7 @@ function ListingItem({ listing, id, onDelete }) {
   const {
     name,
     offer,
-    imageUrls,
+    imgUrls,
     location,
     discountedPrice,
     regularPrice,
@@ -20,7 +20,7 @@ function ListingItem({ listing, id, onDelete }) {
   return (
     <li key={id} className="categoryListing">
       <Link to={`/category/${type}/${id}`} className="categoryListingLink">
-        <img src={imageUrls[0]} alt={name} className="categoryListingImg" />
+        <img src={imgUrls[0]} alt={name} className="categoryListingImg" />
 
         <div className="categoryListingDetails">
           <p className="categoryListingLocation">{location}</p>
